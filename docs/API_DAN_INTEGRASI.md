@@ -14,12 +14,12 @@ Masukkan waktu ISO 8601 beserta offset, misalnya `2026-12-01T06:00:00+07:00` (ta
 
 | Layanan | Endpoint | Kegunaan | Status |
 |---|---|---|---|
-| LocalLoop | GET /api/public/events | Daftar acara publik, lokasi dan waktu | Path tercantum di dokumen mitra; URL, respons dan filter belum disepakati |
-| LocalLoop | GET /api/events/{id} | Detail acara | Path ada di dokumen mitra; akses belum dikonfirmasi; fungsi klien belum dibuat |
+| LocalLoop | GET /api/public/events | Daftar acara publik, lokasi teks dan waktu | Sudah diimplementasikan menurut panduan mitra; URL publik dan API key belum diberikan |
+| LocalLoop | GET /api/public/events/{event_id} | Detail acara publik | Sudah diimplementasikan menurut panduan mitra; fungsi klien AERIVA belum dibuat |
 | CourtSlot | GET /api/public/facilities | Daftar fasilitas umum | Path usulan, belum dikonfirmasi |
 | CourtSlot | GET /api/public/facilities/{id}/availability | Ketersediaan agregat | Path usulan, belum dikonfirmasi |
 
-Lokasi dan waktu dari mitra dapat dipakai untuk meminta penilaian AERIVA. Katalog fasilitas publik bukan otomatis fasilitas kesehatan. Ketersediaan bukan reservasi, dan informasi cuaca tidak otomatis membatalkan acara/reservasi. Domain contoh .stei.fun/.stei.site belum diverifikasi di Registry.
+LocalLoop menyediakan lokasi sebagai teks, tanpa koordinat. Mekanisme mendapatkan koordinat perlu disepakati sebelum lokasi dan waktu acara dipakai untuk meminta penilaian AERIVA. Katalog fasilitas publik bukan otomatis fasilitas kesehatan. Ketersediaan bukan reservasi, dan informasi cuaca tidak otomatis membatalkan acara/reservasi. Base URL dan API key LocalLoop akan diberikan setelah deployment. Kedua endpoint LocalLoop memakai header X-API-Key dan berjalan read-only.
 
 ## Pekerjaan lanjutan
 

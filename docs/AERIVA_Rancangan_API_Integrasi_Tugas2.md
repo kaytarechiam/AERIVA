@@ -18,7 +18,7 @@
 
 | Sumber | Hal yang tertulis | Hal yang belum dibuktikan |
 |---|---|---|
-| [LocalLoop — DDD dan Tech Stack](https://docs.google.com/document/d/1aQs337o0tr6wHKv3ZXxjJBNw0axfeEPv43TX1pkOKGk/edit) | Katalog acara, pencarian berdasarkan kategori/lokasi/tanggal, dan tabel rancangan `GET /api/public/events`. Mereka ingin informasi lingkungan AERIVA untuk acara fisik. | URL dasar, parameter pencarian, contoh respons dan implementasi endpoint yang hidup belum terverifikasi. |
+| LocalLoop — `partner-catalog.md` yang diberikan tim | Endpoint katalog publik dan detail sudah diimplementasikan. Kontrak filter, JSON, dan autentikasi dijelaskan pada Bagian 6. | Base URL publik dan API key belum diberikan, layanan publik belum diuji. |
 | [CourtSlot — perancangan layanan](https://docs.google.com/document/d/1Fgm12ReclZc7yq63S0ahkqHrTMGmvLtHLJgX-lE4xlc/edit) | API baca untuk katalog fasilitas dan ketersediaan agregat tanpa identitas warga; meminta lokasi, periode, indikator hujan dari AERIVA. | Path, parameter, skema JSON, URL dasar dan ketersediaan layanan belum dinyatakan secara rinci dalam bagian yang terbaca. |
 | [Makalah AERIVA](https://docs.google.com/document/d/1QkyMAnuDl0LFiPvORDHqcHvoiWIRFNT2xJDaPQkVULQ/edit?tab=t.kyfi5wo9uem8) | Inti: penilaian lingkungan, penjelasan, rekomendasi waktu; sumber, periode dan satuan harus jelas. | Aturan numerik dan ambang akhir belum disepakati/diuji. |
 | PDF Tugas Besar, hlm. 14–17 dan 20–23 | Tugas 2: API inti di STB dengan Docker dan HTTPS, dokumentasi serta contoh request; integrasi minimal dua kelompok di Tugas 3. | Status Registry, hostname, API key, implementasi dan deployment kelompok sekarang belum diperiksa. |
@@ -44,7 +44,7 @@ Penggabungan hasil dari ketiga API berjalan **di aplikasi atau layanan integrasi
 |---|---|
 | Nama sistem/tim | AERIVA / `aeriva` — usulan, pengguna dan Nanda menentukan bersama |
 | AERIVA — K02 | `https://aeriva.stei.site` — usulan jika nama `aeriva` tersedia di Registry; belum terdaftar/terverifikasi |
-| LocalLoop — K01 | `https://localloop.stei.fun` — pola contoh; hostname sebenarnya perlu diminta ke tim |
+| LocalLoop — K01 | Base URL HTTPS akan diberikan oleh tim LocalLoop setelah deployment dan pengujian. |
 | CourtSlot — K01 | `https://courtslot.stei.fun` — pola contoh; hostname sebenarnya perlu diminta ke tim |
 | Base API | `https://<nama-terdaftar>.<domain-kelas>/api/v1` — **placeholder, belum hidup** |
 | Endpoint health | `GET /api/v1/health` — usulan, cek konfigurasi gateway |
@@ -135,17 +135,26 @@ Contoh format error usulan: `{"error":{"code":"SOURCE_UNAVAILABLE","message":"Da
 
 ## 6. API LocalLoop yang dibutuhkan AERIVA
 
-Tabel mitra mencantumkan **`GET /api/public/events`** sebagai rancangan endpoint baca. Jangan menambahkan `/api/v1` atau hostname AERIVA di depannya: format akhir milik LocalLoop. Path detail `GET /api/events/{id}` juga tercantum dalam tabel, tetapi apakah akses publik diperlukan masih perlu konfirmasi.
+Berdasarkan `partner-catalog.md` dari LocalLoop, endpoint katalog sudah diimplementasikan. Base URL HTTPS publik dan API key untuk AERIVA akan diberikan LocalLoop setelah deployment dan pengujian. Katalog hanya berisi acara berstatus published dan aksesnya read-only dengan header `X-API-Key`.
 
-Usulan kebutuhan yang perlu dikirim untuk disepakati: filter lokasi atau koordinat/radius, tanggal mulai–akhir, kategori, hanya acara publik, halaman/batas. Data minimum: `id`, judul, kategori, waktu mulai/akhir dan offset/zona waktu, nama lokasi, koordinat bila tersedia, format indoor/outdoor, status publikasi, tautan detail dan waktu pembaruan. Jangan meminta identitas peserta atau ringkasan audiens untuk fitur ini.
+| Method | Path | Kegunaan |
+|---|---|---|
+| GET | `/api/public/events` | Daftar acara publik, diurutkan berdasarkan ID menaik |
+| GET | `/api/public/events/{event_id}` | Detail satu acara publik berdasarkan ID bilangan bulat positif |
 
-Contoh respons berikut **usulan AERIVA, bukan respons asli LocalLoop**:
+Filter opsional daftar adalah `q`, `category`, `event_format`, `location`, `starts_from`, dan `starts_before`. Rentang waktu memakai batas awal inklusif dan akhir eksklusif, serta membutuhkan waktu ISO 8601 dengan zona waktu. Filter digabungkan dengan AND. Endpoint MVP tidak menyediakan pagination. `event_format=in_person` berarti acara luring dan tidak menjamin kegiatan di luar ruangan.
+
+Respons daftar berbentuk `{"items": [...]}`; jika kosong, `{"items": []}`. Detail mengembalikan satu objek acara tanpa pembungkus `items`. Field yang selalu ada adalah `id`, `title`, `capacity`, `waitlist_enabled`, dan `status`. Field lain seperti `category`, `description`, `event_format`, `starts_at`, `ends_at`, `location`, `registration_opens_at`, dan `registration_closes_at` bersifat opsional dan dapat tidak disertakan. Waktu dikembalikan dalam UTC. `capacity` adalah kapasitas total, bukan jumlah kursi tersisa.
+
+Contoh respons dari panduan LocalLoop berikut menggunakan data ilustrasi:
 
 ```json
-{"items":[{"id":"evt-demo-01","title":"Jalan pagi komunitas","category":"olahraga","start":"2026-12-01T07:00:00+07:00","end":"2026-12-01T09:00:00+07:00","location":{"name":"Taman contoh","lat":-6.9175,"lon":107.6191},"environment":"outdoor","status":"published","detail_url":null}],"next_cursor":null}
+{"items":[{"id":7,"title":"Community Sports Day","capacity":40,"waitlist_enabled":true,"status":"published","category":"Sports","description":"Outdoor activities with local communities","event_format":"in_person","starts_at":"2026-12-05T02:00:00Z","ends_at":"2026-12-05T05:00:00Z","location":"Bandung, West Java","registration_opens_at":"2026-11-25T00:00:00Z","registration_closes_at":"2026-12-04T16:00:00Z"}]}
 ```
 
-Alur yang diusulkan: pengguna memilih acara → aplikasi memakai lokasi dan periode acara → meminta assessment AERIVA → menampilkan ringkasan lingkungan dan status cakupan. Jika acara di luar cakupan forecast, tampilkan bahwa prakiraan belum tersedia; jangan mengarang prediksi. Registrasi dan status acara tetap kewenangan LocalLoop.
+Lokasi berupa teks dan tidak menyertakan koordinat. AERIVA perlu mendapatkan koordinat melalui mekanisme yang disepakati dengan LocalLoop sebelum meminta penilaian lingkungan. Acara online atau acara yang waktu/lokasinya tidak tersedia perlu ditangani sesuai data yang ada. API ini tidak menyediakan prakiraan, skor lingkungan, data peserta, registrasi individual, atau data kehadiran.
+
+Error dari LocalLoop mencakup `401 INVALID_API_KEY`, `404 EVENT_NOT_FOUND`, `422` validasi FastAPI, dan `503 PARTNER_AUTH_UNAVAILABLE`. Error 401, 404, dan 503 berbentuk objek dengan field `code` dan `message` pada tingkat teratas. Kunci API diberikan secara privat, dipakai di header, dan disimpan pada layanan integrasi di luar STB, bukan di aplikasi mobile.
 
 ## 7. API CourtSlot yang dibutuhkan AERIVA
 
@@ -169,7 +178,7 @@ Pengguna memilih fasilitas dan slot → AERIVA menampilkan ringkasan lingkungan 
 1. Base URL HTTPS, dokumentasi OpenAPI/Postman dan status live; path, method, contoh respons dan error.
 2. Query/filter yang didukung, format koordinat, zona waktu, format tanggal, pagination, cakupan lokasi, laju pembaruan dan limit.
 3. Cara mendapatkan API key masing-masing, masa berlaku, akun uji bila relevan dan kontak teknis.
-4. LocalLoop: filter acara outdoor/lokasi/tanggal dan apakah detail publik; bagaimana menangani acara tanpa koordinat.
+4. LocalLoop: minta base URL HTTPS, API key privat, dan sepakati mekanisme mendapatkan koordinat dari lokasi teks. Kontrak katalog dan detail publik sudah dijelaskan dalam panduan mitra.
 5. CourtSlot: API katalog dan ketersediaan agregat, skema fasilitas/unit/slot dan penutupan, serta cakupan kota/data uji.
 6. Apakah kedua mitra menerima desain AERIVA assessment/recommendations, kebutuhan indikator hujan, rentang waktu dan definisi status parsial.
 7. Tulis kesepakatan pada README kedua pihak setelah disetujui, lalu uji nyata dan simpan bukti. Status calon/perencanaan saat ini bukan bukti integrasi.
@@ -208,7 +217,7 @@ Tenggat dalam dokumen: akhir M14 untuk URL/dokumentasi Registry; final 13 Desemb
 
 ## 12. Kontrak acuan bersama
 
-Gunakan Bagian 13 sebagai **satu usulan kontrak yang tetap** untuk LocalLoop, CourtSlot, dan AERIVA. Nama host K01 yang dipilih untuk rancangan ini adalah `localloop.stei.fun` dan `courtslot.stei.fun`; nama host K02 untuk AERIVA adalah `aeriva.stei.site`. Ketiga nama masih harus tersedia di Registry dan dipakai pada tunnel masing-masing tim. Dokumen ini tidak dapat menetapkan nama Registry atau implementasi untuk kelompok lain; apabila satu nama tidak tersedia atau tim mitra menggunakan kontrak berbeda, atur alamat dan penerjemahan data pada lapisan integrasi agar antarmuka yang digunakan layar AERIVA dapat tetap sama.
+Gunakan Bagian 13 sebagai **satu usulan kontrak yang tetap** untuk LocalLoop, CourtSlot, dan AERIVA. Base URL LocalLoop akan diberikan oleh tim mereka. Nama host CourtSlot `courtslot.stei.fun` dan AERIVA `aeriva.stei.site` adalah usulan yang masih harus tersedia di Registry dan dipakai pada tunnel masing-masing tim. Dokumen ini tidak dapat menetapkan nama Registry atau implementasi untuk kelompok lain; apabila satu nama tidak tersedia atau tim mitra menggunakan kontrak berbeda, atur alamat dan penerjemahan data pada lapisan integrasi agar antarmuka yang digunakan layar AERIVA dapat tetap sama.
 
 ## 13. Daftar alamat endpoint dua arah untuk kesepakatan
 
@@ -216,12 +225,12 @@ Bagian ini adalah daftar yang bisa dipakai ketiga tim untuk menyamakan kontrak. 
 
 ### 13.1 LocalLoop → diambil oleh AERIVA
 
-| Nama informasi | Method | Alamat endpoint lengkap | Status dan informasi yang diambil |
+| Informasi | Method | Endpoint | Status |
 |---|---|---|---|
-| Daftar acara publik | GET | `https://localloop.stei.fun/api/public/events` | **Path tercantum dalam dokumen LocalLoop.** Hostname diusulkan; filter lokasi, waktu, kategori dan bentuk JSON diajukan sebagai kontrak di Bagian 14. Hasil yang diinginkan: ID, judul, kategori, waktu, lokasi, koordinat dan status acara publik. |
-| Detail acara | GET | `https://localloop.stei.fun/api/events/{id}` | **Path tercantum dalam dokumen LocalLoop.** Hostname dan akses antarkelompok masih perlu dikonfirmasi; contoh field ditetapkan pada Bagian 14. |
+| Daftar acara publik | GET | `{LOCALLOOP_BASE_URL}/api/public/events` | Diimplementasikan menurut panduan mitra. Base URL dan API key AERIVA belum diberikan. |
+| Detail acara publik | GET | `{LOCALLOOP_BASE_URL}/api/public/events/{event_id}` | Diimplementasikan menurut panduan mitra. ID berupa bilangan bulat positif. |
 
-Contoh kebutuhan: AERIVA mengambil acara publik yang relevan, lalu memakai lokasi dan waktu acara yang diberikan LocalLoop untuk meminta informasi lingkungan dari layanan AERIVA. Apabila filter tidak tersedia, tim perlu menyepakati alternatif sebelum implementasi; URL di atas belum bisa langsung diuji sampai hostname dan aksesnya diberikan.
+Semua request memakai header `X-API-Key`. Field acara, filter yang didukung, dan bentuk respons dijelaskan dalam Bagian 6 dan 14.1. Lokasi adalah teks tanpa koordinat, sehingga mekanisme memperoleh koordinat masih perlu disepakati.
 
 ### 13.2 CourtSlot → diambil oleh AERIVA
 
@@ -256,7 +265,7 @@ Respons contoh dan keadaan `insufficient_data` ada pada Bagian 5. Jangan memberi
 ### 13.4 Kesimpulan alamat yang perlu dikonfirmasi
 
 1. **AERIVA:** cek nama `aeriva` di Registry K02, lalu konfirmasi apakah base URL benar `https://aeriva.stei.site` dan path assessment/recommendations disetujui serta diimplementasikan Nanda.
-2. **LocalLoop:** minta hostname K01 persis, dokumentasi, akses dan respons final untuk `/api/public/events` serta `/api/events/{id}`. Penambahan `/api/v1`, bila ada, harus berdasarkan dokumentasi mereka.
+2. **LocalLoop:** minta base URL HTTPS dan API key privat yang akan diberikan setelah deployment, lalu uji `/api/public/events` dan `/api/public/events/{event_id}`. Sepakati cara memperoleh koordinat dari lokasi teks.
 3. **CourtSlot:** minta hostname K01 persis serta path, parameter dan respons final untuk fasilitas dan ketersediaan. Kedua path di 13.2 masih usulan.
 4. Setelah ketiga kelompok menyepakati kontrak dan mendaftarkan URL, ganti placeholder, tambahkan contoh respons nyata yang aman, dan catat versi serta tanggal konfirmasi. Pengujian nyata tetap diperlukan untuk membuktikan integrasi.
 
@@ -267,24 +276,20 @@ Ketiga tim diharapkan memakai bentuk berikut sebagai acuan bersama. **Bagian ini
 
 ### 14.1 LocalLoop — katalog publik
 
-**GET `https://localloop.stei.fun/api/public/events`**
+**GET `{LOCALLOOP_BASE_URL}/api/public/events`**
 
-| Parameter | Tipe | Ketentuan acuan |
+| Parameter | Tipe | Ketentuan |
 |---|---|---|
-| `lat`, `lon` | number | Opsional bersama, koordinat WGS84 |
-| `radius_km` | number | Opsional jika koordinat diisi |
-| `start`, `end` | string | Opsional bersama, ISO 8601 dengan offset; rentang `[start,end)` |
-| `category` | string | Opsional, nama kategori yang disepakati |
-| `environment` | string | Opsional: `outdoor`, `indoor`, `unknown` |
-| `limit`, `cursor` | integer, string | Opsional; ukuran halaman dan penanda halaman berikut |
+| `q` | string, maks. 100 karakter | Pencarian judul atau deskripsi tanpa membedakan kapital |
+| `category` | string, maks. 64 karakter | Kategori teks dengan kecocokan penuh tanpa membedakan kapital |
+| `event_format` | `in_person` atau `online` | Kecocokan format acara |
+| `location` | string, maks. 100 karakter | Pencarian sebagian teks lokasi tanpa membedakan kapital |
+| `starts_from` | datetime ISO 8601 dengan zona waktu | Waktu mulai acara pada atau setelah nilai ini |
+| `starts_before` | datetime ISO 8601 dengan zona waktu | Waktu mulai acara sebelum nilai ini |
 
-Respons acuan:
+Semua parameter opsional dan digabungkan dengan AND. Server membandingkan waktu sebagai UTC. Tidak ada pagination, pencarian koordinat/radius, atau filter indoor/outdoor dalam kontrak MVP. Detail memakai **GET `{LOCALLOOP_BASE_URL}/api/public/events/{event_id}`** dan mengembalikan satu objek, bukan daftar. Header `X-API-Key` wajib untuk kedua endpoint. Lihat contoh respons dan field pada Bagian 6.
 
-```json
-{"items":[{"id":"evt-demo-01","title":"Jalan pagi komunitas","category":"olahraga","start":"2026-12-01T07:00:00+07:00","end":"2026-12-01T09:00:00+07:00","location":{"name":"Taman contoh","lat":-6.9175,"lon":107.6191},"environment":"outdoor","status":"published","detail_url":null,"updated_at":"2026-11-30T18:00:00+07:00"}],"next_cursor":null}
-```
-
-**GET `https://localloop.stei.fun/api/events/{id}`** memakai ID acara yang diterima dari daftar. Respons acuan: objek acara yang memiliki field yang sama dengan satu item di atas dan boleh menambahkan `description`. Path ini tercantum dalam dokumen LocalLoop; sifat publik, autentikasi dan responsnya masih perlu persetujuan mereka. Data peserta, kehadiran, dan informasi sponsor tidak dibutuhkan AERIVA.
+Base URL dan API key masih menunggu LocalLoop. Kontrak ini tidak memuat koordinat sehingga penilaian lingkungan berdasarkan lokasi acara memerlukan mekanisme penyelesaian lokasi yang disepakati.
 
 ### 14.2 CourtSlot — fasilitas dan slot publik
 
