@@ -16,13 +16,14 @@ Masukkan waktu ISO 8601 beserta offset, misalnya `2026-12-01T06:00:00+07:00` (ta
 |---|---|---|---|
 | LocalLoop | GET /api/public/events | Daftar acara publik, lokasi teks dan waktu | Sudah diimplementasikan menurut panduan mitra; URL publik dan API key belum diberikan |
 | LocalLoop | GET /api/public/events/{event_id} | Detail acara publik | Sudah diimplementasikan menurut panduan mitra; fungsi klien AERIVA belum dibuat |
-| CourtSlot | GET /api/public/facilities | Daftar fasilitas umum | Path usulan, belum dikonfirmasi |
-| CourtSlot | GET /api/public/facilities/{id}/availability | Ketersediaan agregat | Path usulan, belum dikonfirmasi |
+| CourtSlot | GET /api/public/facilities | Daftar fasilitas umum | Kontrak target AERIVA; implementasi belum diverifikasi |
+| CourtSlot | GET /api/public/facilities/{facility_id} | Detail fasilitas umum | Kontrak target AERIVA; klien belum dibuat |
+| CourtSlot | GET /api/public/facilities/{facility_id}/availability | Ketersediaan agregat | Kontrak target AERIVA; implementasi belum diverifikasi |
 
-LocalLoop menyediakan lokasi sebagai teks, tanpa koordinat. Mekanisme mendapatkan koordinat perlu disepakati sebelum lokasi dan waktu acara dipakai untuk meminta penilaian AERIVA. Katalog fasilitas publik bukan otomatis fasilitas kesehatan. Ketersediaan bukan reservasi, dan informasi cuaca tidak otomatis membatalkan acara/reservasi. Base URL dan API key LocalLoop akan diberikan setelah deployment. Kedua endpoint LocalLoop memakai header X-API-Key dan berjalan read-only.
+LocalLoop menyediakan lokasi sebagai teks, tanpa koordinat. Pengguna memilih koordinat yang sesuai sebelum lokasi dan waktu acara dipakai untuk meminta penilaian AERIVA. Katalog fasilitas publik bukan otomatis fasilitas kesehatan. Ketersediaan bukan reservasi, dan informasi cuaca tidak otomatis membatalkan acara/reservasi. Base URL dan API key LocalLoop akan diberikan setelah deployment. Kedua endpoint LocalLoop memakai header X-API-Key dan berjalan read-only.
 
 ## Pekerjaan lanjutan
 
-Nanda perlu menentukan sumber prakiraan, menyusun dan memvalidasi aturan/ambang, menangani data parsial, membuat auth/JWT/API key, database sesuai kebutuhan, uji, kontainer dan deployment gateway/tunnel STB. Integrasi mitra berjalan di luar STB dengan timeout, cache sesuai kontrak, status kegagalan dan autentikasi per mitra; jangan menyimpan API key rahasia dalam APK. Mitra harus menyepakati endpoint, filter, respons, limit, dan hak akses. Dua API mitra harus benar-benar dipakai pada fitur aplikasi, bukan hanya dicantumkan dalam daftar.
+Nanda perlu menentukan sumber prakiraan, menyusun dan memvalidasi aturan/ambang, menangani data parsial, membuat auth/JWT/API key, database sesuai kebutuhan, uji, kontainer dan deployment gateway/tunnel STB. Integrasi mitra berjalan di luar STB dengan timeout, cache sesuai kontrak, status kegagalan dan autentikasi per mitra; jangan menyimpan API key rahasia dalam APK. Endpoint, filter, respons, limit, dan hak akses ditetapkan dalam dokumen kontrak dan perlu diimplementasikan serta diuji. Dua API mitra harus benar-benar dipakai pada fitur aplikasi, bukan hanya dicantumkan dalam daftar.
 
-Rancangan lengkap: salin dokumen `AERIVA_Rancangan_API_Integrasi_Tugas2.md` ke folder docs jika diperlukan dan perbarui bersama mitra. Sertakan README.pdf, dokumentasi API, URL layanan, dan repo sesuai ketentuan Tugas 2 setelah layanan benar-benar siap.
+Kontrak lengkap tersedia di `AERIVA_Rancangan_API_Integrasi_Tugas2.md` dalam folder ini. Sertakan README.pdf, dokumentasi API, URL layanan, dan repo sesuai ketentuan Tugas 2 setelah layanan benar-benar siap.
