@@ -11,7 +11,7 @@ Dokumen ini menetapkan acuan implementasi integrasi ketiga tim. Berdasarkan arah
 
 | Layanan | Base URL target | Peran |
 |---|---|---|
-| AERIVA Core | `https://aeriva.stei.site` | Penilaian kondisi lingkungan dan rekomendasi waktu |
+| AERIVA Core | `https://apayapapaya.stei.site` | Penilaian kondisi lingkungan dan rekomendasi waktu |
 | LocalLoop | `https://localloop.stei.fun` | Katalog kegiatan publik |
 | CourtSlot | `https://courtslot.stei.fun` | Katalog dan ketersediaan fasilitas publik |
 
@@ -78,7 +78,7 @@ Path LocalLoop sesuai `partner-catalog.md` yang diberikan. Path CourtSlot dan ta
 
 ### 4.1 Health
 
-`GET https://aeriva.stei.site/api/v1/health`
+`GET https://apayapapaya.stei.site/api/v1/health`
 
 ```json
 {"status":"ok","forecast_provider_configured":true}
@@ -88,7 +88,7 @@ Health dapat diakses tanpa API key dan tetap dikenai rate limit. Nilai `forecast
 
 ### 4.2 Assessment
 
-`GET https://aeriva.stei.site/api/v1/environment/assessment`
+`GET https://apayapapaya.stei.site/api/v1/environment/assessment`
 
 | Parameter | Tipe | Ketentuan |
 |---|---|---|
@@ -124,7 +124,7 @@ X-API-Key: <API_KEY_AERIVA>
 
 ### 4.3 Recommendations
 
-`GET https://aeriva.stei.site/api/v1/environment/recommendations` menggunakan parameter `lat`, `lon`, `start`, dan `end` dengan aturan yang sama.
+`GET https://apayapapaya.stei.site/api/v1/environment/recommendations` menggunakan parameter `lat`, `lon`, `start`, dan `end` dengan aturan yang sama.
 
 ```json
 {
@@ -225,7 +225,7 @@ Status slot adalah `available`, `full`, atau `closed`. `remaining_capacity` beru
 
 | Variabel | Nilai target atau fungsi |
 |---|---|
-| `AERIVA_BASE_URL` | `https://aeriva.stei.site` |
+| `AERIVA_BASE_URL` | `https://apayapapaya.stei.site` |
 | `LOCALLOOP_BASE_URL` | `https://localloop.stei.fun` |
 | `COURTSLOT_BASE_URL` | `https://courtslot.stei.fun` |
 | `AERIVA_API_KEY` | Kunci khusus konsumen untuk memanggil AERIVA |
